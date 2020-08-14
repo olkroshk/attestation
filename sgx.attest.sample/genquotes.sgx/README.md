@@ -1,4 +1,4 @@
-TODO: these notes are in progress
+(WORK IN PROGRESS)
 
 ## Samples
 * [MAA SGX Attestation Sample Code](https://github.com/gkostal/attestation/tree/master/sgx.attest.sample)
