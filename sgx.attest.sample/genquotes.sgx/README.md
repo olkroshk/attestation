@@ -64,7 +64,7 @@ To unset `AZDCAP_DEBUG_LOG_LEVEL` run:
 unset AZDCAP_DEBUG_LOG_LEVEL
 ```
 ### Build and Run 
-##### 1. Get conde and build
+##### 1. Get code and build
 ```
 export WORK_DIR=$(pwd)
 echo $WORK_DIR
