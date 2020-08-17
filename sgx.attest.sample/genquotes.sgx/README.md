@@ -218,7 +218,7 @@ The [`ran` target](https://github.com/gkostal/attestation/blob/master/sgx.attest
 ## What is?
 
 ##### AZDCAP_DEBUG_LOG_LEVEL 
-`AZDCAP_DEBUG_LOG_LEVEL` is used to enable logging to stdout for debug purposes. Supported values are `INFO`, `WARNING`, and `ERROR`; any other values will fail silently. If a logging callback is set by the caller such as open enclave this setting will be ignored as the logging callback will have precedence. Log levels follow standard behavior: INFO logs everything, WARNING logs warnings and errors, and ERROR logs only errors. Default setting has logging off. These capatalized values are represented internally as strings.
+`AZDCAP_DEBUG_LOG_LEVEL` is used to enable logging to stdout for debug purposes. Supported values are `INFO`, `WARNING`, and `ERROR`; any other values will fail silently. If a logging callback is set by the caller such as open enclave this setting will be ignored as the logging callback will have precedence. Log levels follow standard behavior: INFO logs everything, WARNING logs warnings and errors, and ERROR logs only errors. Default setting has logging off. These capitalized values are represented internally as strings.
 
 Source: [Azure DCAP Client's configuration](https://github.com/microsoft/Azure-DCAP-Client#configuration)
 
