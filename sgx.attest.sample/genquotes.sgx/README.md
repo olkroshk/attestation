@@ -166,7 +166,7 @@ make build
     * openssl [generates](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L19) corresponding public key `public.pem`
   * `build` target of the enclave/Makefile is triggered next:
     * oeedger8r tool, available in the Open Enclave SDK, [generates](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L25) the marshaling code necessary to call functions between the enclave and the host 
-    * Make [calls](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L28) c++ compiler to build executable `genquote_enclave` 
+    * Make [calls](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L28) c++ compiler to build enclave object `genquote_enclave` 
   * Next step is the [`sign` target](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L30):
     * `oesign` tool [is called 4 times](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L31-L38) for each configuration file located in genquotes/enclave, followed by corresponding renaming of the output. The `oesign` tool signs an enclave image file with provided RSA private key in PEM format. The enclave's properties are read from the passed configuration file. These properties override any properties that were already defined inside the enclave image 
 * (2) genquotes/host/Makefile is [called](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/host/Makefile#L10)
