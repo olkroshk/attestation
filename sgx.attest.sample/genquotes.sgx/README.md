@@ -64,7 +64,7 @@ To unset `AZDCAP_DEBUG_LOG_LEVEL` run:
 unset AZDCAP_DEBUG_LOG_LEVEL
 ```
 ### Build and Run 
-##### 1. Get conde and build
+##### 1. Get code and build
 ```
 export WORK_DIR=$(pwd)
 echo $WORK_DIR
@@ -166,7 +166,7 @@ make build
     * openssl [generates](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L19) corresponding public key `public.pem`
   * `build` target of the enclave/Makefile is triggered next:
     * oeedger8r tool, available in the Open Enclave SDK, [generates](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L25) the marshaling code necessary to call functions between the enclave and the host 
-    * Make [calls](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L28) c++ compiler to build executable `genquote_enclave` 
+    * Make [calls](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L28) c++ compiler to build enclave object `genquote_enclave` 
   * Next step is the [`sign` target](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L30):
     * `oesign` tool [is called 4 times](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/enclave/Makefile#L31-L38) for each configuration file located in genquotes/enclave, followed by corresponding renaming of the output. The `oesign` tool signs an enclave image file with provided RSA private key in PEM format. The enclave's properties are read from the passed configuration file. These properties override any properties that were already defined inside the enclave image 
 * (2) genquotes/host/Makefile is [called](https://github.com/gkostal/attestation/blob/master/sgx.attest.sample/genquotes/host/Makefile#L10)
@@ -218,7 +218,7 @@ The [`ran` target](https://github.com/gkostal/attestation/blob/master/sgx.attest
 ## What is?
 
 ##### AZDCAP_DEBUG_LOG_LEVEL 
-`AZDCAP_DEBUG_LOG_LEVEL` is used to enable logging to stdout for debug purposes. Supported values are `INFO`, `WARNING`, and `ERROR`; any other values will fail silently. If a logging callback is set by the caller such as open enclave this setting will be ignored as the logging callback will have precedence. Log levels follow standard behavior: INFO logs everything, WARNING logs warnings and errors, and ERROR logs only errors. Default setting has logging off. These capatalized values are represented internally as strings.
+`AZDCAP_DEBUG_LOG_LEVEL` is used to enable logging to stdout for debug purposes. Supported values are `INFO`, `WARNING`, and `ERROR`; any other values will fail silently. If a logging callback is set by the caller such as open enclave this setting will be ignored as the logging callback will have precedence. Log levels follow standard behavior: INFO logs everything, WARNING logs warnings and errors, and ERROR logs only errors. Default setting has logging off. These capitalized values are represented internally as strings.
 
 Source: [Azure DCAP Client's configuration](https://github.com/microsoft/Azure-DCAP-Client#configuration)
 
