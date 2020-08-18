@@ -33,18 +33,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
-#include <pwd.h>
+#include <string>
 
 #include "sgx_error.h"   /* sgx_status_t */
 #include "sgx_eid.h"     /* sgx_enclave_id_t */
 #include "sgx_urts.h"
 #include "enclave_u.h"
+#include "sgx_quote_3.h"
+#include "sgx_dcap_ql_wrapper.h"
 
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
                                sgx_report_t *app_report);
+const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t size);
 
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -84,17 +85,16 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     printf("succeed!\n");
 
-    printf("\nAllocate quote_buffer: ");
     uint8_t* p_quote_buffer = (uint8_t*)malloc(quote_size);
     if (NULL == p_quote_buffer) {
-        printf("Couldn't allocate quote_buffer\n");
+        printf("\nCouldn't allocate quote_buffer\n");
         if (NULL != p_quote_buffer) {
             free(p_quote_buffer);
         }
         return -1;
     }
     memset(p_quote_buffer, 0, quote_size);
-    printf("succeed!\n");
+    printf("\n>>> allocated quote_buffer, just saying\n");
 
     printf("\nStep4: Call sgx_qe_get_quote: ");
     qe3_ret = sgx_qe_get_quote(&app_report,
@@ -115,19 +115,28 @@ int SGX_CDECL main(int argc, char *argv[])
     sgx_ql_certification_data_t *p_cert_data =
             (sgx_ql_certification_data_t *)((uint8_t *)p_auth_data + sizeof(*p_auth_data) + p_auth_data->size);
 
-    printf("cert_key_type = 0x%x\n", p_cert_data->cert_key_type);
+    printf("\n>>> cert_key_type = 0x%x\n", p_cert_data->cert_key_type);
 
-    printf("\nStep5: Sate quote to JSON");
-    FILE *fp = fopen("../genquotes/quotes/enclave1.info.debug.json", "w");
+    printf("\nStep5: Saving quote to JSON file\n");
+    const int hex_buffer_size = 1024*64;
+    char hex_buffer[hex_buffer_size];
+
+    std::string output_dir("./out/");
+    std::string cmd("mkdir -vp " + output_dir);
+    std::string file(output_dir + std::string(argv[2]));
+    system(cmd.c_str());
+    printf("\n>>> output file name = %s\n", file.c_str());
+    FILE *fp = fopen(file.c_str(), "w");
     fprintf(fp, "%s\n", "{");
-    fprintf(fp, "  \"Type\": %d,\n", (int)2); // In oe sdk enclave type 2 means OE_ENCLAVE_TYPE_SGX: https://github.com/openenclave/openenclave/blob/3e15573418caed43f9094ff8aec36cdde4f278f7/include/openenclave/bits/types.h#L127
-    fprintf(fp, "  \"MrEnclaveHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.mr_enclave.m, 32));
-    fprintf(fp, "  \"MrSignerHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.mr_signer.m, 32));
+    fprintf(fp, "  \"Type\": %d,\n", (int)2);
+    // In open-enclave sdk enclave type 2 means OE_ENCLAVE_TYPE_SGX: https://github.com/openenclave/openenclave/blob/3e15573418caed43f9094ff8aec36cdde4f278f7/include/openenclave/bits/types.h#L127
+    fprintf(fp, "  \"MrEnclaveHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.mr_enclave.m, SGX_HASH_SIZE));
+    fprintf(fp, "  \"MrSignerHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.mr_signer.m, SGX_HASH_SIZE));
     fprintf(fp, "  \"ProductIdHex\": \"%u\",\n", (uint16_t)app_report.body.isv_prod_id);
     fprintf(fp, "  \"SecurityVersion\": %u,\n", (int)app_report.body.isv_prod_id);
-    fprintf(fp, "  \"Attributes\": %u,\n", (uint64_t)app_report.body.attributes.flags);
-    //fprintf(fp, "  \"QuoteHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, p_quote_buffer, quote_size));
-    //fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, (uint8_t*)p_auth_data, sizeof(*p_auth_data)));
+    fprintf(fp, "  \"Attributes\": %lu,\n", (uint64_t)app_report.body.attributes.flags);
+    fprintf(fp, "  \"QuoteHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, p_quote_buffer, quote_size));
+    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.report_data.d, SGX_REPORT_DATA_SIZE));
     fprintf(fp, "%s\n", "}");
     fclose(fp);
 
@@ -135,6 +144,19 @@ int SGX_CDECL main(int argc, char *argv[])
         free(p_quote_buffer);
     }
     return ret;
+}
+
+const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t size)
+{
+    if (size * 2 >= maxSize)
+        return "DEADBEEF";
+
+    for (int i=0; i < size; i++)
+    {
+        sprintf(&buffer[i*2], "%02X", data[i]);
+    }
+    buffer[size*2+1] = '\0';
+    return buffer;
 }
 
 bool create_app_enclave_report(const char* enclave_path,

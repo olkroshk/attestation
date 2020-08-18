@@ -3,7 +3,9 @@
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
-SGX_DEBUG ?= 1
+SGX_DEBUG ?= 0
+DCAP_LIBRARY_NAME := sgx_dcap_ql
+UAE_LIBRARY_NAME := sgx_quote_ex
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -38,9 +40,9 @@ endif
 ######## App Settings ########
 
 ifneq ($(SGX_MODE), HW)
-	Urts_Library_Name := sgx_urts_sim
+	URTS_LIBRARY_NAME := sgx_urts_sim
 else
-	Urts_Library_Name := sgx_urts
+	URTS_LIBRARY_NAME := sgx_urts
 endif
 
 CFLAGS := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes -I$(SGX_SDK)/include
@@ -58,7 +60,7 @@ else
 endif
 
 CXXFLAGS := $(CFLAGS) -std=c++11
-LDFLAGS := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread 
+LDFLAGS := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(URTS_LIBRARY_NAME) -lpthread -l$(DCAP_LIBRARY_NAME) -l$(UAE_LIBRARY_NAME)
 
 ifneq ($(SGX_MODE), HW)
 	LDFLAGS += -lsgx_uae_service_sim
