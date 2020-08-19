@@ -56,7 +56,7 @@ namespace validatequotes
 
             // Send to service for attestation
             var maaService = new MaaService(this.attestDnsName);
-            var serviceJwtToken = await maaService.AttestOpenEnclaveAsync(enclaveInfo.GetMaaBody());
+            var serviceJwtToken = await maaService.AttestSgxEnclaveAsync(enclaveInfo.GetMaaBody());
 
             // Dump JWT only?
             if (this.dumpJWTOnly)

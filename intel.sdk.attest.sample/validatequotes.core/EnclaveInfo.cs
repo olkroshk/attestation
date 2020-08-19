@@ -18,9 +18,9 @@ namespace validatequotes
             return SerializationHelper.ReadFromFile<EnclaveInfo>(filePath);
         }
 
-        public AttestOpenEnclaveRequestBody GetMaaBody()
+        public AttestSgxEnclaveRequestBody GetMaaBody()
         {
-            var maaBody = new AttestOpenEnclaveRequestBody
+            var maaBody = new AttestSgxEnclaveRequestBody
             {
                 Quote = HexHelper.ConvertHexToBase64Url(QuoteHex),
                 EnclaveHeldData = HexHelper.ConvertHexToBase64Url(EnclaveHeldDataHex)

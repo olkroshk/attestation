@@ -21,10 +21,9 @@ namespace validatequotes
             this.providerDnsName = providerDnsName;
         }
 
-        public async Task<string> AttestOpenEnclaveAsync(AttestOpenEnclaveRequestBody requestBody)
+        public async Task<string> AttestSgxEnclaveAsync(AttestSgxEnclaveRequestBody requestBody)
         {
             // Build request
-	    // TODO: REVERT ME OR UPDATE ME, this app should be able to handle both open enclave and sgx enclave
             var uri = $"https://{providerDnsName}:443/attest/Tee/SgxEnclave?api-version=2018-09-01-preview";
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Content = new StringContent(JsonConvert.SerializeObject(requestBody));
@@ -36,7 +35,7 @@ namespace validatequotes
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                throw new Exception($"AttestOpenEnclaveAsync: MAA service status code {(int)response.StatusCode}.  Details: '{body}'");
+                throw new Exception($"AttestSgxEnclaveAsync: MAA service status code {(int)response.StatusCode}.  Details: '{body}'");
             }
 
             // Return result
