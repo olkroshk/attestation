@@ -16,10 +16,13 @@ public.pem: private.pem
 
 genkey: public.pem
 
-build:
-	@ echo "Build using: $(SGX_EDGER8R), $(CC), $(CXX)"
+gentrusted:
+	@ echo "Generrating trusted source code for enclave using: $(SGX_EDGER8R)"
 	$(SGX_EDGER8R) --trusted enclave.edl --search-path ./ --search-path $(SGX_SDK)/include
-	$(CXX) -c $(CXXFLAGS) $(ENCLAVE_CPP_FLAGS) ecalls.cpp 
+
+build: gentrusted
+	@ echo "Build using: $(CC), $(CXX)"
+	$(CXX) -c $(CXXFLAGS) $(ENCLAVE_CPP_FLAGS) ecalls.cpp
 	$(CC) -c $(CFLAGS) $(ENCLAVE_C_FLAGS) enclave_t.c
 	$(CXX) -o genquote_enclave ecalls.o enclave_t.o $(ENCLAVE_LINK_FLAGS)
 
@@ -30,5 +33,5 @@ sign:
 	@$(SGX_ENCLAVE_SIGNER) sign -key private.pem -enclave genquote_enclave -out genquote_enclave.securityversion.signed -config enc.config.securityversion.xml
 
 clean:
-	rm -f *.o genquote_enclave *.signed enclave_*.* *.pem
+	rm -vf *.o genquote_enclave *.signed enclave_*.* *.pem
 

@@ -44,7 +44,9 @@
 
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
-                               sgx_report_t *app_report);
+                               sgx_report_t *app_report,
+			       const sgx_report_data_t *hashed_data);
+
 const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t size);
 
 int SGX_CDECL main(int argc, char *argv[])
@@ -68,9 +70,14 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     printf("succeed!\n");
 
+    sgx_report_data_t enclave_held_data = {0x05};
+
+    // TODO hash this funcking data
+    sgx_report_data_t hashed_data = {0x05};
+
     printf("\nStep2: Call create_app_report: ");
     sgx_report_t app_report;
-    if(true != create_app_enclave_report(argv[1], qe_target_info, &app_report)) {
+    if(true != create_app_enclave_report(argv[1], qe_target_info, &app_report, &hashed_data)) {
         printf("Call to create_app_report() failed\n");
         return -1;
     }
@@ -136,7 +143,7 @@ int SGX_CDECL main(int argc, char *argv[])
     fprintf(fp, "  \"SecurityVersion\": %u,\n", (int)app_report.body.isv_prod_id);
     fprintf(fp, "  \"Attributes\": %lu,\n", (uint64_t)app_report.body.attributes.flags);
     fprintf(fp, "  \"QuoteHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, p_quote_buffer, quote_size));
-    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.report_data.d, SGX_REPORT_DATA_SIZE));
+    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, enclave_held_data.d, SGX_REPORT_DATA_SIZE));
     fprintf(fp, "%s\n", "}");
     fclose(fp);
 
@@ -161,7 +168,8 @@ const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t
 
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
-                               sgx_report_t *app_report)
+                               sgx_report_t *app_report,
+			       const sgx_report_data_t *hashed_data)
 {
     bool ret = true;
     uint32_t retval = 0;
@@ -183,10 +191,12 @@ bool create_app_enclave_report(const char* enclave_path,
         return ret;
     }
 
+
     sgx_status = enclave_create_report(eid,
                                        &retval,
                                        &qe_target_info,
-                                       app_report);
+                                       hashed_data,
+				       app_report);
     if ((SGX_SUCCESS != sgx_status) || (0 != retval)) {
         printf("\nCall to get_app_enclave_report() failed\n");
         ret = false;

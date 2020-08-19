@@ -13,6 +13,6 @@ build:
 	$(CXX) -o genquote_sgx_host host.o enclave_u.o $(LDFLAGS)
 
 clean:
-	rm -f genquote_sgx_host *.o enclave_*.*
+	rm -vf genquote_sgx_host *.o enclave_*.*
 
 
