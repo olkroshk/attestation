@@ -2,7 +2,7 @@
   "profiles": {
     "validatequotes": {
       "commandName": "Project",
-      "commandLineArgs": "../../../../genquotes/quotes/enclave.info.debug.json"
+      "commandLineArgs": "../../../../genquotes/out/enclave.info.debug.json"
     }
   }
 }
