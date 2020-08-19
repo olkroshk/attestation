@@ -24,7 +24,8 @@ namespace validatequotes
         public async Task<string> AttestOpenEnclaveAsync(AttestOpenEnclaveRequestBody requestBody)
         {
             // Build request
-            var uri = $"https://{providerDnsName}:443/attest/Tee/OpenEnclave?api-version=2018-09-01-preview";
+	    // TODO: REVERT ME OR UPDATE ME, this app should be able to handle both open enclave and sgx enclave
+            var uri = $"https://{providerDnsName}:443/attest/Tee/SgxEnclave?api-version=2018-09-01-preview";
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Content = new StringContent(JsonConvert.SerializeObject(requestBody));
 
