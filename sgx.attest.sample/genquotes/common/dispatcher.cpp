@@ -53,11 +53,12 @@ int ecall_dispatcher::get_remote_report_with_pubkey(
     uint8_t** remote_report,
     size_t* remote_report_size)
 {
-    uint8_t pem_public_key[512];
+    //uint8_t pem_public_key[512];
     uint8_t* report = NULL;
     size_t report_size = 0;
     uint8_t* key_buf = NULL;
     int ret = 1;
+    uint8_t pem_public_key[6] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
     TRACE_ENCLAVE("get_remote_report_with_pubkey");
     if (m_initialized == false)
@@ -66,12 +67,13 @@ int ecall_dispatcher::get_remote_report_with_pubkey(
         goto exit;
     }
 
-    m_crypto->retrieve_public_key(pem_public_key);
+//    m_crypto->retrieve_public_key(pem_public_key);
+
 
     // Generate a remote report for the public key so that the enclave that
     // receives the key can attest this enclave.
     if (m_attestation->generate_remote_report(
-            pem_public_key, sizeof(pem_public_key), &report, &report_size))
+            pem_public_key, 6, &report, &report_size))
     {
         // Allocate memory on the host and copy the report over.
         *remote_report = (uint8_t*)oe_host_malloc(report_size);
