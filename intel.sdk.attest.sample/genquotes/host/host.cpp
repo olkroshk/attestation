@@ -94,7 +94,7 @@ int SGX_CDECL main(int argc, char *argv[])
     printf("succeed!\n");
 
     sgx_report_data_t enclave_held_data = {0x05};
-    sgx_report_data_t hashed_data = {0x05};
+    sgx_report_data_t hashed_data;
     sha256(enclave_held_data.d, hashed_data.d);
 
     printf("\nStep2: Call create_app_report: ");
