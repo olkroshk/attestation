@@ -5,7 +5,7 @@
 
  #run
 
-all: build
+all: build run
 
 build:
 	$(MAKE) -C enclave
@@ -16,12 +16,17 @@ clean:
 	$(MAKE) -C host clean
 	rm -rvf ./out
 
+ifeq ($(SGX_DEBUG), 1)
 run:
 	host/genquote_sgx_host ./enclave/genquote_enclave.debug.signed             enclave.info.debug.json
+else
+run:
 	host/genquote_sgx_host ./enclave/genquote_enclave.release.signed           enclave.info.release.json
 	host/genquote_sgx_host ./enclave/genquote_enclave.prodid.signed            enclave.info.prodid.json
 	host/genquote_sgx_host ./enclave/genquote_enclave.securityversion.signed   enclave.info.securityversion.json
 
 runone:
 	host/genquote_sgx_host ./enclave/genquote_enclave.prodid.signed            enclave.info.prodid.json
+endif
+
 
