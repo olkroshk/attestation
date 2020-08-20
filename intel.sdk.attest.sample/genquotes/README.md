@@ -175,9 +175,12 @@ make build
 
 ##### Output files
 
-* 2 executables:
+* 1 executable:
 ```
 	host/genquote_host
+```
+* 1 shared object:
+```
 	enclave/genquote_enclave
 ```
 * 4 signed enclave images:
