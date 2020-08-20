@@ -38,7 +38,7 @@ enclave {
     trusted {
         /* define ECALLs here. */
         public uint32_t enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
-                                              [in]const sgx_report_data_t* p_report_data,
+					      [in]const uint8_t* p_some_data,
                                               [out]sgx_report_t* p_report);
 
     };

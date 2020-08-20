@@ -54,21 +54,23 @@ void sha256(const uint8_t *data, uint8_t *hashed_data)
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
     SHA256_Update(&sha256, data, SGX_REPORT_DATA_SIZE);
-    SHA256_Final(hash, &sha256);
-    hashed_data = hash;
+    SHA256_Final(hashed_data, &sha256);
+}
+
+void printh(uint8_t *hash, size_t size)
+{
     stringstream ss;
-    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    for(int i = 0; i < size; i++)
     {
         ss << hex << setw(2) << setfill('0') << (int)hash[i];
     }
     cout << ss.str() << endl;
 }
 
-
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
                                sgx_report_t *app_report,
-			       const sgx_report_data_t *hashed_data);
+			       const uint8_t hashed_data[SGX_HASH_SIZE]);
 
 const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t size);
 
@@ -93,13 +95,14 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     printf("succeed!\n");
 
-    sgx_report_data_t enclave_held_data = {0x05};
-    sgx_report_data_t hashed_data = {0x05};
-    sha256(enclave_held_data.d, hashed_data.d);
+    uint8_t enclave_held_data[SGX_REPORT_DATA_SIZE] = {0x01, 0x02, 0x03, 0x04, 0x05};
+    uint8_t hashed_data[SGX_HASH_SIZE];
+    sha256(enclave_held_data, hashed_data);
+    printh(hashed_data, SGX_HASH_SIZE);
 
     printf("\nStep2: Call create_app_report: ");
     sgx_report_t app_report;
-    if(true != create_app_enclave_report(argv[1], qe_target_info, &app_report, &hashed_data)) {
+    if(true != create_app_enclave_report(argv[1], qe_target_info, &app_report, hashed_data)) {
         printf("Call to create_app_report() failed\n");
         return -1;
     }
@@ -165,7 +168,7 @@ int SGX_CDECL main(int argc, char *argv[])
     fprintf(fp, "  \"SecurityVersion\": %u,\n", (int)app_report.body.isv_prod_id);
     fprintf(fp, "  \"Attributes\": %lu,\n", (uint64_t)app_report.body.attributes.flags);
     fprintf(fp, "  \"QuoteHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, p_quote_buffer, quote_size));
-    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, enclave_held_data.d, SGX_REPORT_DATA_SIZE));
+    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, enclave_held_data, SGX_REPORT_DATA_SIZE));
     fprintf(fp, "%s\n", "}");
     fclose(fp);
 
@@ -191,7 +194,8 @@ const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
                                sgx_report_t *app_report,
-			       const sgx_report_data_t *hashed_data)
+			       const uint8_t hashed_data[SGX_HASH_SIZE])
+//			       const sgx_report_data_t *hashed_data)
 {
     bool ret = true;
     uint32_t retval = 0;
