@@ -1,1 +1,1 @@
-dotnet run ../genquotes/out/enclave.info.debug.json              sharedcus.cus.attest.azure.net    true
+dotnet run ../genquotes/out/enclave.info.prodid.json              sharedcus.cus.attest.azure.net    true

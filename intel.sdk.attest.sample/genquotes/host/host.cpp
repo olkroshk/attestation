@@ -48,19 +48,18 @@
 
 using namespace std;
 
-void sha256(const uint8_t *data, uint8_t *hashed_data)
+void sha256sum(const uint8_t *data, uint32_t data_size, uint8_t *hash)
 {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
-    SHA256_Update(&sha256, data, SGX_REPORT_DATA_SIZE);
-    SHA256_Final(hashed_data, &sha256);
+    SHA256_Update(&sha256, data, data_size);
+    SHA256_Final(hash, &sha256);
 }
 
-void printh(uint8_t *hash, size_t size)
+void printh(uint8_t *hash, size_t sz)
 {
     stringstream ss;
-    for(int i = 0; i < size; i++)
+    for(int i = 0; i < sz; i++)
     {
         ss << hex << setw(2) << setfill('0') << (int)hash[i];
     }
@@ -70,9 +69,10 @@ void printh(uint8_t *hash, size_t size)
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
                                sgx_report_t *app_report,
-			       const uint8_t hashed_data[SGX_HASH_SIZE]);
+			       const sgx_report_data_t* p_data);
 
 const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t size);
+const char *uint16_to_buffer (char *buffer, uint maxSize, uint16_t data, size_t size);
 
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -95,14 +95,14 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     printf("succeed!\n");
 
-    uint8_t enclave_held_data[SGX_REPORT_DATA_SIZE] = {0x01, 0x02, 0x03, 0x04, 0x05};
-    uint8_t hashed_data[SGX_HASH_SIZE];
-    sha256(enclave_held_data, hashed_data);
-    printh(hashed_data, SGX_HASH_SIZE);
+    uint8_t enclave_held_data[6] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+    sgx_report_data_t hash;
+    sha256sum(enclave_held_data, 6, hash.d);
+    //printh(hash.d, sizeof(hash.d));
 
     printf("\nStep2: Call create_app_report: ");
     sgx_report_t app_report;
-    if(true != create_app_enclave_report(argv[1], qe_target_info, &app_report, hashed_data)) {
+    if(true != create_app_enclave_report(argv[1], qe_target_info, &app_report, &hash)) {
         printf("Call to create_app_report() failed\n");
         return -1;
     }
@@ -126,7 +126,6 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     memset(p_quote_buffer, 0, quote_size);
-    printf("\n>>> allocated quote_buffer, just saying\n");
 
     printf("\nStep4: Call sgx_qe_get_quote: ");
     qe3_ret = sgx_qe_get_quote(&app_report,
@@ -147,28 +146,26 @@ int SGX_CDECL main(int argc, char *argv[])
     sgx_ql_certification_data_t *p_cert_data =
             (sgx_ql_certification_data_t *)((uint8_t *)p_auth_data + sizeof(*p_auth_data) + p_auth_data->size);
 
-    printf("\n>>> cert_key_type = 0x%x\n", p_cert_data->cert_key_type);
-
-    printf("\nStep5: Saving quote to JSON file\n");
     const int hex_buffer_size = 1024*64;
     char hex_buffer[hex_buffer_size];
 
     std::string output_dir("./out/");
-    std::string cmd("mkdir -vp " + output_dir);
+    std::string cmd("mkdir -p " + output_dir);
     std::string file(output_dir + std::string(argv[2]));
     system(cmd.c_str());
-    printf("\n>>> output file name = %s\n", file.c_str());
+    printf("\nStep5: Saving quote to JSON file, cert_key_type = 0x%x, output file name = %s\n", p_cert_data->cert_key_type, file.c_str());
     FILE *fp = fopen(file.c_str(), "w");
     fprintf(fp, "%s\n", "{");
     fprintf(fp, "  \"Type\": %d,\n", (int)2);
-    // In open-enclave sdk enclave type 2 means OE_ENCLAVE_TYPE_SGX: https://github.com/openenclave/openenclave/blob/3e15573418caed43f9094ff8aec36cdde4f278f7/include/openenclave/bits/types.h#L127
+    // In open-enclave sdk enclave type 2 means OE_ENCLAVE_TYPE_SGX: 
+    // https://github.com/openenclave/openenclave/blob/3e15573418caed43f9094ff8aec36cdde4f278f7/include/openenclave/bits/types.h#L127
     fprintf(fp, "  \"MrEnclaveHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.mr_enclave.m, SGX_HASH_SIZE));
     fprintf(fp, "  \"MrSignerHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, app_report.body.mr_signer.m, SGX_HASH_SIZE));
-    fprintf(fp, "  \"ProductIdHex\": \"%u\",\n", (uint16_t)app_report.body.isv_prod_id);
-    fprintf(fp, "  \"SecurityVersion\": %u,\n", (int)app_report.body.isv_prod_id);
+    fprintf(fp, "  \"ProductIdHex\": \"%s\",\n", uint16_to_buffer(hex_buffer, hex_buffer_size,(uint16_t)app_report.body.isv_prod_id, 16));
+    fprintf(fp, "  \"SecurityVersion\": %u,\n", (int)app_report.body.isv_svn);
     fprintf(fp, "  \"Attributes\": %lu,\n", (uint64_t)app_report.body.attributes.flags);
     fprintf(fp, "  \"QuoteHex\": \"%s\",\n", format_hex_buffer(hex_buffer, hex_buffer_size, p_quote_buffer, quote_size));
-    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, enclave_held_data, SGX_REPORT_DATA_SIZE));
+    fprintf(fp, "  \"EnclaveHeldDataHex\": \"%s\"\n", format_hex_buffer(hex_buffer, hex_buffer_size, enclave_held_data, sizeof( enclave_held_data)));
     fprintf(fp, "%s\n", "}");
     fclose(fp);
 
@@ -176,6 +173,21 @@ int SGX_CDECL main(int argc, char *argv[])
         free(p_quote_buffer);
     }
     return ret;
+}
+
+const char *uint16_to_buffer (char *buffer, uint maxSize, uint16_t n, size_t size)
+{
+    if (size * 2 >= maxSize || size < 2)
+        return "DEADBEEF";
+    sprintf(&buffer[0], "%02X", uint8_t(n));
+    sprintf(&buffer[2], "%02X", uint8_t(n >> 8));
+
+    for (int i=2; i < size; i++)
+    {
+        sprintf(&buffer[i*2], "%02X", 0);
+    }
+    buffer[size*2+1] = '\0';
+    return buffer;
 }
 
 const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t size)
@@ -194,8 +206,7 @@ const char *format_hex_buffer (char *buffer, uint maxSize, uint8_t *data, size_t
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
                                sgx_report_t *app_report,
-			       const uint8_t hashed_data[SGX_HASH_SIZE])
-//			       const sgx_report_data_t *hashed_data)
+			       const sgx_report_data_t* p_data)
 {
     bool ret = true;
     uint32_t retval = 0;
@@ -217,11 +228,10 @@ bool create_app_enclave_report(const char* enclave_path,
         return ret;
     }
 
-
     sgx_status = enclave_create_report(eid,
                                        &retval,
                                        &qe_target_info,
-                                       hashed_data,
+                                       p_data,
 				       app_report);
     if ((SGX_SUCCESS != sgx_status) || (0 != retval)) {
         printf("\nCall to get_app_enclave_report() failed\n");
@@ -229,15 +239,6 @@ bool create_app_enclave_report(const char* enclave_path,
         sgx_destroy_enclave(eid);
         return ret;
     }
-
-    /*
-    int retval = 1;
-    uint8_t* pem_key = NULL;
-    size_t key_size = 0;
-    uint8_t* remote_report = NULL;
-    size_t remote_report_size = 0;
-    sgx_status_t status = get_remote_report_with_pubkey(global_eid, &retval, &pem_key, &key_size, &remote_report, &remote_report_size);
-    */
 
     sgx_destroy_enclave(eid);
     return ret;
