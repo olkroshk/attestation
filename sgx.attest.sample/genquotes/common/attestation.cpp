@@ -4,6 +4,22 @@
 #include "attestation.h"
 #include <string.h>
 #include "log.h"
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+
+using namespace std;
+
+void printh(uint8_t *hash, size_t size)
+{
+    stringstream ss;
+    for(int i = 0; i < size; i++)
+    {
+        ss << hex << setw(2) << setfill('0') << (int)hash[i];
+    }
+    cout << ss.str() << endl;
+}
+
 
 Attestation::Attestation(Crypto* crypto)
 {
@@ -29,6 +45,7 @@ bool Attestation::generate_remote_report(
     {
         goto exit;
     }
+    printh(sha256, 32);//SGX_HASH_SIZE);
 
     // To generate a remote report that can be attested remotely by an enclave
     // running  on a different platform, pass the
