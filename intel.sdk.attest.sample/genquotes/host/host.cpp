@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <openssl/sha.h>
 
 #include "sgx_error.h"   /* sgx_status_t */
 #include "sgx_eid.h"     /* sgx_enclave_id_t */
@@ -41,6 +45,25 @@
 #include "enclave_u.h"
 #include "sgx_quote_3.h"
 #include "sgx_dcap_ql_wrapper.h"
+
+using namespace std;
+
+void sha256(const uint8_t *data, uint8_t *hashed_data)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, data, SGX_REPORT_DATA_SIZE);
+    SHA256_Final(hash, &sha256);
+    hashed_data = hash;
+    stringstream ss;
+    for(int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        ss << hex << setw(2) << setfill('0') << (int)hash[i];
+    }
+    cout << ss.str() << endl;
+}
+
 
 bool create_app_enclave_report(const char* enclave_path,
                                sgx_target_info_t qe_target_info,
@@ -71,9 +94,8 @@ int SGX_CDECL main(int argc, char *argv[])
     printf("succeed!\n");
 
     sgx_report_data_t enclave_held_data = {0x05};
-
-    // TODO hash this funcking data
     sgx_report_data_t hashed_data = {0x05};
+    sha256(enclave_held_data.d, hashed_data.d);
 
     printf("\nStep2: Call create_app_report: ");
     sgx_report_t app_report;
