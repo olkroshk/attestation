@@ -31,7 +31,7 @@ The flow is:
 
 ### Quote Generation
 
-Remote quote generation is performed by the following call to the ```sgx_create_report``` method in the [ecall.cpp](./genquotes/enclave/ecall.cpp) file in the ```genquote_enclave``` application.
+Remote quote generation is performed by the following call to the ```sgx_create_report``` method in the [ecall.cpp](./genquotes/enclave/ecalls.cpp) file in the ```genquote_enclave``` application.
 
 ```
 sgx_status_t sgx_create_report(
