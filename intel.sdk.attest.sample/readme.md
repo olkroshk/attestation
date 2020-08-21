@@ -1,5 +1,3 @@
-TODO - update me!
-
 # MAA SGX Attestation Sample Code
 ## Overview
 The MAA SGX Attestation sample code demonstrates how to generate a quote in an SGX enclave and then get it validated by the MAA service.  The "enclave held data" for the quote is populated with public key component of a 2048 bit RSA key that's held within the enclave.
