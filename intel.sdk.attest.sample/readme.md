@@ -1,6 +1,6 @@
-# Sample code for Intel® SGX Attestation using and Microsoft Azure Attestation and Intel(R) SGX DCAP for Linux* OS
+## Sample code for Intel® SGX Attestation using Microsoft Azure Attestation and Intel(R) SGX DCAP for Linux* OS
 
-## Overview
+### Overview
 
 
 
