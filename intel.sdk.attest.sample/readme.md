@@ -29,54 +29,39 @@ The flow is:
     1. Validates that the MAA JWT claim values match the parsed data in the JSON file for the well known fields like Security Version Number, ProductID, MRSIGNER, MRENCLAVE, etc.
     1. Produces a report in the console with the results
 
-The following diagram depicts the relationship between the different artifacts produced the MAA service for JWT token validation.
-![JWT Validation Overview Diagram](./docs/maa.jwt.validation.overview.png)
+### Quote Generation
 
-Intel(R) Software Guard Extensions (Intel(R) SGX) Data Center Attestation Primitives (Intel(R) SGX DCAP): https://github.com/intel/SGXDataCenterAttestationPrimitives
+Remote quote generation is performed by the following call to the ```sgx_create_report``` method in the [ecall.cpp](./genquotes/enclave/ecall.cpp) file in the ```genquote_enclave``` application.
 
-Intel(R) Software Guard Extensions for Linux* OS: https://github.com/intel/linux-sgx
-
-### Remote Quote Generation
-*Note: The SGX enclave code in this sample is derived from the [remote_attestation sample code](https://github.com/openenclave/openenclave/tree/master/samples/remote_attestation) in Open Enclave SDK.  Many thanks to the author(s)!*
-
-Remote quote generation is performed by the following call to the ```oe_get_report``` method in the [attestation.cpp](./genquotes/common/attestation.cpp#L43) file in the ```genquote_enclave``` application.
 ```
-    result = oe_get_report(
-        OE_REPORT_FLAGS_REMOTE_ATTESTATION,
-        sha256,
-        sizeof(sha256),
-        NULL, 
-        0,
-        &temp_buf,
-        remote_report_buf_size);
+sgx_status_t sgx_create_report(
+    const sgx_target_info_t *target_info,
+    const sgx_report_data_t *report_data,
+    sgx_report_t *report
+);
+
 ```
 
-## Remote Quote Validation via MAA Attestation
+### Remote Quote Validation via MAA Attestation
 
-The MAA service is called to perform attestation by the following call in the [MaaService.cs](./validatequotes.net/MaaService.cs#L32) file:
+The MAA service is called to perform attestation by the following call in the [MaaService.cs](./validatequotes.core/MaaService.cs#L32) file:
 
 ```
     // Send request
     var response = await theHttpClient.SendAsync(request);
 ```
 
-The verification that the MAA service JWT passes signature validation and is issued by the expected issuer is in the  [JwtHelperValidation.cs](./validatequotes.net/Helpers/JwtValidationHelper.cs#L21) file:
+The verification that the MAA service JWT passes signature validation and is issued by the expected issuer is in the [JwtHelperValidation.cs](./validatequotes.core/Helpers/JwtValidationHelper.cs#L22) file:
 ```
     public static TokenValidationResult ValidateMaaJwt(string attestDnsName, string serviceJwt)
 ```
 
-The verification that the MAA service JWT claims match the initial parsed report data is performed in the [EnclaveInfo.cs](./validatequotes.net/EnclaveInfo.cs#L31) file:
+The verification that the MAA service JWT claims match the initial parsed report data is performed in the [EnclaveInfo.cs](./validatequotes.core/EnclaveInfo.cs#L31) file:
 ```
     public void CompareToMaaServiceJwtToken(string serviceJwtToken, bool includeDetails)
 ```
 
-If the MAA service is running within an SGX enclave, the validation of the MAA service quote is performed in the [MaaQuoteValidator.cs](./validatequotes.net/MaaQuoteValidator.cs#L41) file:
-```
-    static public void ValidateMaaQuote(string x5c, bool includeDetails)
-```
-
-
-## Instructions to Build and Run Yourself
+### Instructions to Build and Run Yourself
 
 To set up the pre-requisites to build and run these samples:
 1. Install Ubuntu 18.04 on an [Azure Confidential Compute](https://azure.microsoft.com/en-us/solutions/confidential-compute/) VM.
