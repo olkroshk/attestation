@@ -10,6 +10,8 @@
 
 The MAA SGX Attestation sample code demonstrates how to generate a quote in an SGX enclave and then get it validated by the MAA service. The "enclave held data" for the quote for simplicity is populated with sample data represented as `uint8_t` array.
 
+Microsoft Azure Attestation attestation relies on Intel(R) Software Guard Extensions (Intel(R) SGX) Data Center Attestation Primitives (Intel(R) SGX DCAP). Intel(R) SGX DCAP provides SGX attestation support targeted for data centers, cloud services providers and enterprises. This attestation model leverages Elliptic Curve Digital Signature algorithm (ECDSA) versus the current client based SGX attestation model which is EPID based (Enhanced Privacy Identification).
+
 The execution flow in the sample code are outlined in the following diagram:
 ![MAA SGX Attestation Overview Diagram](./docs/sample.flow.png)
 
