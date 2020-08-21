@@ -65,7 +65,6 @@ The verification that the MAA service JWT claims match the initial parsed report
 
 1. Install Ubuntu 18.04 on an [Azure Confidential Compute](https://azure.microsoft.com/en-us/solutions/confidential-compute/) VM.
 1. Install the Intel SGX SDK - WRITE ME
-1. Add the command "```. /opt/openenclave/share/openenclave/openenclaverc```" to your ~/.bashrc file.
 1. Install the [.NET CORE SDK](https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-ubuntu-1804) on this VM.
 
 To build and run the samples:
