@@ -40,7 +40,7 @@ namespace validatequotes
             //    Logger.WriteLine("");
             //}
 
-            var isDebuggable = (Attributes & 2) == 1;
+            var isDebuggable = (Attributes & 2) != 0;
 	    // In SGX DEBUG flag is equal to 0x0000000000000002ULL 
 	    // See https://github.com/intel/linux-sgx/blob/master/common/inc/sgx_attributes.h#L39
             var isd = jwtBody["is-debuggable"];
