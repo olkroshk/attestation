@@ -9,7 +9,7 @@
 The MAA SGX Attestation sample code demonstrates how to generate a quote in an SGX enclave and then get it validated by the MAA service. The "enclave held data" for the quote for simplicity is populated with sample data represented as `uint8_t` array.
 
 The execution flow in the sample code are outlined in the following diagram:
-![MAA SGX Attestation Overview Diagram](./docs/sample.execution.png)
+![MAA SGX Attestation Overview Diagram](./docs/sample.flow.png)
 
 The flow is:
 1. ```genquote_enclave``` - This application is an SGX enclave created via the Intel® SGX SDK. It exposes one ECALL to retrieve a remote quote for enclave held data.
