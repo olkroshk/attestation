@@ -1,22 +1,23 @@
 ## Sample code for Intel® SGX Attestation using Microsoft Azure Attestation and Intel(R) SGX DCAP for Linux* OS
 
+### Credits
+* The sample, including code, design and documentation, is derived from the [MAA SGX Attestation Sample Code Using Open Enclave SDK](https://github.com/Azure-Samples/microsoft-azure-attestation/tree/master/sgx.attest.sample) and follows its execution flow
+* The SGX enclave and host code in this sample is derived from the [Intel(R) Software Guard Extensions Data Center Attestation Primitives (Intel(R) SGX DCAP) Quote Generation SampleCode](https://github.com/intel/SGXDataCenterAttestationPrimitives/tree/master/SampleCode/QuoteGenerationSample)
+
 ### Overview
 
+The MAA SGX Attestation sample code demonstrates how to generate a quote in an SGX enclave and then get it validated by the MAA service. The "enclave held data" for the quote is populated with sample data represented as `uint8_t` array.
 
-
-
-The MAA SGX Attestation sample code demonstrates how to generate a quote in an SGX enclave and then get it validated by the MAA service.  The "enclave held data" for the quote is populated with public key component of a 2048 bit RSA key that's held within the enclave.
-
-The components used in the sample code are outlined in the following diagram:
+The execution flow in the sample code are outlined in the following diagram:
 ![MAA SGX Attestation Overview Diagram](./docs/sample.execution.png)
 
 The flow is:
+1. ```genquote_enclave``` - This application is an SGX enclave created via the Open Enclave SDK.  It exposes one ecall to retrieve a remote quote and enclave held data.
 1. ```genquote_host``` - This application is run first and performs the following:
     1. Launches the ```genquote_enclave``` SGX enclave
     1. Calls into the enclave (via an ecall) to retrieve a remote quote and a copy of the enclave held data, which in this case is the public key for a 2048 bit RSA key
     1. Calls into the Open Enclave SDK to parse the remote quote to retrieve important attributes like Security Version Number, ProductID, MRSIGNER, MRENCLAVE, etc.
     1. Persists the remote quote, enclave held data and parsed report fields to a JSON file on disk
-1. ```genquote_enclave``` - This application is an SGX enclave created via the Open Enclave SDK.  It exposes one ecall to retrieve a remote quote and enclave held data.
 1. ```validatequotes.core``` - This application is built on .NET core and runs on any platform.  It consumes the JSON file persisted by the ```genquote_host``` application and performs the following:
     1. Calls the MAA service for validation, passing it the remote quote and enclave held data found in the JSON file
     1. Validates that the MAA JWT passes signature validation and is issued by the expected party
