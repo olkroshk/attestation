@@ -17,7 +17,6 @@ public.pem: private.pem
 genkey: public.pem
 
 gentrusted:
-	@ echo "Generrating trusted source code for enclave using: $(SGX_EDGER8R)"
 	$(SGX_EDGER8R) --trusted enclave.edl --search-path ./ --search-path $(SGX_SDK)/include
 
 build: gentrusted
