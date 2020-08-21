@@ -15,13 +15,13 @@ The flow is:
 1. ```genquote_enclave``` - This application is an SGX enclave created via the Intel® SGX SDK. It exposes one ECALL to retrieve a remote quote for enclave held data.
     1. Generate signing key (`private.pem`)
     1. Build enclave (`genquote_enclave`)
-    1. Sign encalve with the key
+    1. Sign enclave with the key
 1. ```genquote_host``` - This application is run first and performs the following:
-    1. Launches the ```genquote_enclave``` SGX enclave
-    1. Calls into the enclave (via an ecall) to retrieve a remote quote and a copy of the enclave held data, which in this case is the public key for a 2048 bit RSA key
-    1. Calls into the Open Enclave SDK to parse the remote quote to retrieve important attributes like Security Version Number, ProductID, MRSIGNER, MRENCLAVE, etc.
+    1. Initializes and launches the `genquote_enclave` SGX enclave instance
+    1. Invokes the enclave protected method (ECALL) to retrieve a remote quote for hashed (SHA256) enclave held data, which in this case is a `uint8_t` static array
+    1. Retrieves important attributes from the SGX report, such as Security Version Number, ProductID, MRSIGNER, MRENCLAVE, etc.
     1. Persists the remote quote, enclave held data and parsed report fields to a JSON file on disk
-1. ```validatequotes.core``` - This application is built on .NET core and runs on any platform.  It consumes the JSON file persisted by the ```genquote_host``` application and performs the following:
+1. ```validatequotes.core``` - This application is built on .NET core and runs on any platform. It consumes the JSON file persisted by the ```genquote_host``` application and performs the following:
     1. Calls the MAA service for validation, passing it the remote quote and enclave held data found in the JSON file
     1. Validates that the MAA JWT passes signature validation and is issued by the expected party
     1. Validates that the MAA JWT claim values match the parsed data in the JSON file for the well known fields like Security Version Number, ProductID, MRSIGNER, MRENCLAVE, etc.
@@ -34,7 +34,7 @@ Intel(R) Software Guard Extensions (Intel(R) SGX) Data Center Attestation Primit
 
 Intel(R) Software Guard Extensions for Linux* OS: https://github.com/intel/linux-sgx
 
-## Remote Quote Generation
+### Remote Quote Generation
 *Note: The SGX enclave code in this sample is derived from the [remote_attestation sample code](https://github.com/openenclave/openenclave/tree/master/samples/remote_attestation) in Open Enclave SDK.  Many thanks to the author(s)!*
 
 Remote quote generation is performed by the following call to the ```oe_get_report``` method in the [attestation.cpp](./genquotes/common/attestation.cpp#L43) file in the ```genquote_enclave``` application.
