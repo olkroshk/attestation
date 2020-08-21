@@ -1,5 +1,10 @@
-# MAA SGX Attestation Sample Code
+# Sample code for Intel® SGX Attestation using and Microsoft Azure Attestation and Intel(R) SGX DCAP for Linux* OS
+
 ## Overview
+
+
+
+
 The MAA SGX Attestation sample code demonstrates how to generate a quote in an SGX enclave and then get it validated by the MAA service.  The "enclave held data" for the quote is populated with public key component of a 2048 bit RSA key that's held within the enclave.
 
 The components used in the sample code are outlined in the following diagram:
@@ -24,6 +29,10 @@ The flow is:
 
 The following diagram depicts the relationship between the different artifacts produced the MAA service for JWT token validation.
 ![JWT Validation Overview Diagram](./docs/maa.jwt.validation.overview.png)
+
+Intel(R) Software Guard Extensions (Intel(R) SGX) Data Center Attestation Primitives (Intel(R) SGX DCAP): https://github.com/intel/SGXDataCenterAttestationPrimitives
+
+Intel(R) Software Guard Extensions for Linux* OS: https://github.com/intel/linux-sgx
 
 ## Remote Quote Generation
 *Note: The SGX enclave code in this sample is derived from the [remote_attestation sample code](https://github.com/openenclave/openenclave/tree/master/samples/remote_attestation) in Open Enclave SDK.  Many thanks to the author(s)!*
