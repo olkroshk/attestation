@@ -28,7 +28,7 @@ namespace validatequotes
             if (TenantLookup.ContainsKey(hostName))
             {
                 aadTenant = TenantLookup[hostName];
-                accessToken = await Authentication.AcquireAccessTokenAsync(aadTenant);
+                accessToken = await Authentication.AcquireAccessTokenAsync(aadTenant, false);
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             }
 
@@ -47,7 +47,7 @@ namespace validatequotes
                 SerializationHelper.WriteToFile(TenantLookupFileName, TenantLookup);
 
                 // Authenticate with AAD
-                accessToken = await Authentication.AcquireAccessTokenAsync(aadTenant);
+                accessToken = await Authentication.AcquireAccessTokenAsync(aadTenant, false);
 
                 // Retry one time
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

@@ -1,52 +1,65 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using System.Threading.Tasks;
+﻿// <copyright file="Authentication.cs" company="Microsoft">
+// Copyright (c) Microsoft. All rights reserved.
+// </copyright>
 
 namespace validatequotes
 {
-    public class Authentication
-    {
-        private const string resource = "https://attest.azure.net";
-        private const string clientId = "1950a258-227b-4e31-a9cf-717495945fc2";
-        private const string TokenCacheFileName = "tokencache.bin";
-        private static TokenCache _tokenCache;
-
-        private class ByteArrayWrapper
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Microsoft.Identity.Client;
+        public class Authentication
         {
-            public byte[] theBytes;
-        }
+            private const string AcceleratedTokenCacheFileName = "acceleratedcache.bin";
+            private const string AuthorityPrefix = "https://login.microsoftonline.com/";
+            private const string ClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
+            private static readonly string[] Scopes = new[] { "https://attest.azure.net/.default" };
 
-        static Authentication()
-        {
-            var baw = SerializationHelper.ReadFromFile<ByteArrayWrapper>(TokenCacheFileName);
-            _tokenCache = new TokenCache();
-            _tokenCache.DeserializeAdalV3(baw.theBytes);
-        }
+            private static readonly Dictionary<string, string> AcceleratedCache;
 
-        public static async Task<string> AcquireAccessTokenAsync(string tenant)
-        {
-            string accessToken = null;
-
-            var ctx = new AuthenticationContext($"https://login.windows.net/{tenant}", _tokenCache);
-            
-            try
+            static Authentication()
             {
-                accessToken = (await ctx.AcquireTokenSilentAsync(resource, clientId)).AccessToken;
-            }
-            catch (AdalException x)
-            {
-                Logger.WriteLine($"Silent token acquisition failed.");
-                Logger.WriteLine($"ADAL Exception: {x.Message}");
-                Logger.WriteLine($"Retrieving token via device code authentication now.");
-                
-                DeviceCodeResult codeResult = await ctx.AcquireDeviceCodeAsync(resource, clientId);
-                Logger.WriteLine("Please sign into your AAD account.");
-                Logger.WriteLine($"{codeResult.Message}");
-                Logger.WriteLine("");
-                accessToken = (await ctx.AcquireTokenByDeviceCodeAsync(codeResult)).AccessToken;
-                SerializationHelper.WriteToFile(TokenCacheFileName, new ByteArrayWrapper { theBytes = _tokenCache.SerializeAdalV3() });
+                AcceleratedCache = SerializationHelper.ReadFromFile<Dictionary<string, string>>(AcceleratedTokenCacheFileName);
             }
 
-            return accessToken;
+            public static async Task<string> AcquireAccessTokenAsync(string tenant, bool forceRefresh)
+            {
+                string accessToken = null;
+
+                if (!forceRefresh && AcceleratedCache.ContainsKey(tenant))
+                {
+                    accessToken = AcceleratedCache[tenant];
+                }
+                else
+                {
+                    var publicApplication = PublicClientApplicationBuilder.Create(ClientId)
+                        .WithAuthority($"{AuthorityPrefix}{tenant}")
+                        .WithDefaultRedirectUri()
+                        .Build();
+
+                    AuthenticationResult result;
+                    try
+                    {
+                        var accounts = await publicApplication.GetAccountsAsync();
+                        result = await publicApplication
+                            .AcquireTokenSilent(Scopes, accounts.FirstOrDefault())
+                            .ExecuteAsync();
+                    }
+                    catch (MsalUiRequiredException ex)
+                    {
+                        result = await publicApplication
+                            .AcquireTokenInteractive(Scopes)
+                            .WithClaims(ex.Claims)
+                            .ExecuteAsync();
+                    }
+
+                    accessToken = result.AccessToken;
+                    AcceleratedCache[tenant] = accessToken;
+                    SerializationHelper.WriteToFile(AcceleratedTokenCacheFileName, AcceleratedCache);
+                }
+
+                return accessToken;
+            }
         }
-    }
+ 
 }
